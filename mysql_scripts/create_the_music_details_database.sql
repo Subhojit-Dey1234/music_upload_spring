@@ -14,3 +14,13 @@ CREATE TABLE musics (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (user_id) REFERENCES users(id)
 );
+
+CREATE TABLE documents (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    name VARCHAR(255) NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    size INT NOT NULL
+);
+
+
+ALTER TABLE musics add column ( document_id INT NOT NULL );

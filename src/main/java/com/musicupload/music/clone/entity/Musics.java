@@ -37,4 +37,8 @@ public class Musics {
     @ManyToOne
     @JoinColumn(name = "user_id", nullable = false, insertable = false, updatable = false)
     private Users user;
+
+    @ManyToOne(cascade = CascadeType.ALL)
+    @JoinColumn(name = "document_id", nullable = false)
+    private Documents documents;
 }

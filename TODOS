@@ -1,0 +1,8 @@
+1. Save the Documents in the database
+2. Make the documents with random characters
+3. Name the files with randomise one
+4. Add validation in the file upload
+5. Try to optimise the file upload
+6. Store it to localstack and start the server
+
+1. Add login validation
