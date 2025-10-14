@@ -1,39 +1,39 @@
 package com.musicupload.music.clone.entity;
 
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 import java.util.Date;
 
 @Entity
-@Table(name = "MUSICS", catalog = "music_details")
+@Table(name = "musics", catalog = "music_details")
 @Builder
+@Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 public class Musics {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "ID", unique = true, nullable = false)
+    @Column(name = "id", unique = true, nullable = false)
     private Long id;
 
-    @Column(name = "NAME", nullable = false)
+    @Column(name = "name", nullable = false)
     private String name;
 
-    @Column(name = "USER_ID", nullable = false)
+    @Column(name = "user_id", nullable = false)
     private Long userId;
 
-    @Column(name = "NUMBER_OF_LIKES", nullable = false)
+    @Column(name = "number_of_likes", nullable = false)
     @Builder.Default
     private Long numberOfLikes = 0L;
 
-    @Column(name = "CREATED_AT", nullable = false)
+    @Column(name = "created_at", nullable = false)
     @Temporal(TemporalType.TIMESTAMP)
     private Date createdAt;
 
     @ManyToOne
-    @JoinColumn(name = "USER_ID", nullable = false, insertable = false, updatable = false)
+    @JoinColumn(name = "user_id", nullable = false, insertable = false, updatable = false)
     private Users user;
 }
