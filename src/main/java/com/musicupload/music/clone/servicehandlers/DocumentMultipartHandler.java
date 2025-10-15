@@ -1,17 +1,20 @@
 package com.musicupload.music.clone.servicehandlers;
 
+import com.amazonaws.services.s3.AmazonS3;
+import com.amazonaws.services.s3.model.CannedAccessControlList;
+import com.amazonaws.services.s3.model.PutObjectRequest;
 import com.musicupload.music.clone.entity.Documents;
 import com.musicupload.music.clone.entity.Musics;
-import com.musicupload.music.clone.repository.MusicRepository;
-import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
+import java.util.Objects;
 import java.util.UUID;
 
 @Service
@@ -19,32 +22,63 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class DocumentMultipartHandler {
 
-    private final static String RESOURCES_LOCATION = "src/main/resources/";
-    private final MusicRepository musicRepository;
+    private final AmazonS3 amazonS3;
 
-    @Transactional
-    public void saveDocuments(MultipartFile[] files) throws IOException {
-        if(files == null || files.length != 1)
+    @Value("${music-upload-s3-bucket}")
+    private String s3Bucket;
+
+    public Musics saveDocuments(
+            MultipartFile[] files,
+            Long userId,
+            String musicName) throws IOException {
+
+        if (files == null || files.length != 1)
             throw new IllegalArgumentException("Invalid files provided");
 
-        Documents documents = saveDocumentLocally(files[0]);
-        Musics musics = Musics.builder()
-                .name("Testing with music name")
-                .userId(1L)
-                .documents(documents)
-                .build();
-        Musics musics1 = musicRepository.save(musics);
-        System.out.println(musics1.getId());
-    }
+        String musicFileName = (musicName == null || !musicName.isEmpty())
+                ? files[0].getName()
+                : musicName;
 
-    private static Documents saveDocumentLocally(MultipartFile file) throws IOException {
-        Files.copy(
-                file.getInputStream(), Path.of(RESOURCES_LOCATION + file.getOriginalFilename())
+        MultipartFile multipartFile = files[0];
+        File file = convertMultiPartToFile(multipartFile);
+        Documents documents = getTheDocumentsForDatabase(multipartFile);
+        amazonS3.putObject(
+                new PutObjectRequest(s3Bucket, documents.getName(), file)
+                .withCannedAcl(CannedAccessControlList.PublicRead)
         );
 
-        return Documents.builder()
-                .name(UUID.randomUUID().toString())
-                .musicId(1L)
+
+        return Musics.builder()
+                .name(musicFileName)
+                .userId(userId)
+                .documents(documents)
                 .build();
+    }
+
+    private Documents getTheDocumentsForDatabase(MultipartFile file) {
+        String fileExtension = null;
+        String originalFilename = file.getOriginalFilename();
+        String uniqueFileName = UUID.randomUUID().toString();
+
+        if (originalFilename != null) {
+            int dotIndex = originalFilename.lastIndexOf('.');
+            if (dotIndex > 0 && dotIndex < originalFilename.length() - 1) {
+                fileExtension = originalFilename.substring(dotIndex + 1).toLowerCase();
+            }
+        }
+
+        return Documents.builder()
+                .name(uniqueFileName + "-" + originalFilename)
+                .fileExtension(fileExtension)
+                .size(file.getSize())
+                .build();
+    }
+
+    private File convertMultiPartToFile(MultipartFile file) throws IOException {
+        File convFile = new File(Objects.requireNonNull(file.getOriginalFilename()));
+        FileOutputStream fos = new FileOutputStream(convFile);
+        fos.write(file.getBytes());
+        fos.close();
+        return convFile;
     }
 }

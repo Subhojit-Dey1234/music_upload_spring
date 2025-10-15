@@ -19,7 +19,8 @@ CREATE TABLE documents (
     id INT PRIMARY KEY AUTO_INCREMENT,
     name VARCHAR(255) NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    size INT NOT NULL
+    size INT NOT NULL,
+    file_extension VARCHAR(50)
 );
 
 

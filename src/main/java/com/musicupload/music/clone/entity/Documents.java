@@ -22,10 +22,13 @@ public class Documents {
     private String name;
 
     @Column(name = "size")
-    private String size;
+    private Long size;
 
     @Column(name = "created_at", nullable = false)
     @Temporal(TemporalType.TIMESTAMP)
     @Builder.Default
     private Date createdAt = new Date();
+
+    @Column(name = "file_extension")
+    private String fileExtension;
 }
