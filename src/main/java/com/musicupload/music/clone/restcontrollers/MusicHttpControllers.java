@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.security.NoSuchAlgorithmException;
 import java.util.List;
 
 @RestController
@@ -36,7 +37,7 @@ public class MusicHttpControllers {
             @RequestParam(value = "documents") MultipartFile[] documents,
             @RequestParam(value = "userId") Long userId,
             @RequestParam(value = "musicName", required = false) String musicName
-            ) throws IOException {
+            ) throws IOException, NoSuchAlgorithmException {
         Musics music = documentMultipartHandler.saveDocuments(documents, userId, musicName);
         return musicRepository.save(music);
     }

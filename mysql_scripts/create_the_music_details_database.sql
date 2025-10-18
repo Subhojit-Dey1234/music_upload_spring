@@ -25,3 +25,4 @@ CREATE TABLE documents (
 
 
 ALTER TABLE musics add column ( document_id INT NOT NULL );
+ALTER TABLE documents add column ( hash_key VARCHAR(5000) NOT NULL );

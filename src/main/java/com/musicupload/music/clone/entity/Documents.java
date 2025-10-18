@@ -31,4 +31,7 @@ public class Documents {
 
     @Column(name = "file_extension")
     private String fileExtension;
+
+    @Column(name = "hash_key", nullable = false, length = 5000)
+    private String hashKey;
 }

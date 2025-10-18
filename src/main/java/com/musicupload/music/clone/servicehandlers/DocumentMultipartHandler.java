@@ -14,6 +14,9 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.Objects;
 import java.util.UUID;
 
@@ -30,7 +33,7 @@ public class DocumentMultipartHandler {
     public Musics saveDocuments(
             MultipartFile[] files,
             Long userId,
-            String musicName) throws IOException {
+            String musicName) throws IOException, NoSuchAlgorithmException {
 
         if (files == null || files.length != 1)
             throw new IllegalArgumentException("Invalid files provided");
@@ -41,7 +44,17 @@ public class DocumentMultipartHandler {
 
         MultipartFile multipartFile = files[0];
         File file = convertMultiPartToFile(multipartFile);
-        Documents documents = getTheDocumentsForDatabase(multipartFile);
+
+        // Build Hashing function and the hashkey from the file bytes
+        StringBuilder hashBuilder = new StringBuilder();
+        MessageDigest messageDigest = MessageDigest.getInstance("SHA-256");
+        byte[] fileBytes = messageDigest.digest(Files.readAllBytes(file.toPath()));
+        for(byte b : fileBytes) {
+            hashBuilder.append(String.format("%02x", b));
+        }
+
+        // Documents builder from the file
+        Documents documents = getTheDocumentsForDatabase(multipartFile, hashBuilder.toString());
         amazonS3.putObject(
                 new PutObjectRequest(s3Bucket, documents.getName(), file)
                 .withCannedAcl(CannedAccessControlList.PublicRead)
@@ -55,7 +68,7 @@ public class DocumentMultipartHandler {
                 .build();
     }
 
-    private Documents getTheDocumentsForDatabase(MultipartFile file) {
+    private Documents getTheDocumentsForDatabase(MultipartFile file, String hashKey) {
         String fileExtension = null;
         String originalFilename = file.getOriginalFilename();
         String uniqueFileName = UUID.randomUUID().toString();
@@ -71,6 +84,7 @@ public class DocumentMultipartHandler {
                 .name(uniqueFileName + "-" + originalFilename)
                 .fileExtension(fileExtension)
                 .size(file.getSize())
+                .hashKey(hashKey)
                 .build();
     }
 
