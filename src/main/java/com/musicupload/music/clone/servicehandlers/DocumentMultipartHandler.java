@@ -5,6 +5,10 @@ import com.amazonaws.services.s3.model.CannedAccessControlList;
 import com.amazonaws.services.s3.model.PutObjectRequest;
 import com.musicupload.music.clone.entity.Documents;
 import com.musicupload.music.clone.entity.Musics;
+import com.musicupload.music.clone.exceptions.DuplicateFilePath;
+import com.musicupload.music.clone.exceptions.FileExtensionEmpty;
+import com.musicupload.music.clone.exceptions.FileExtensionNotSupported;
+import com.musicupload.music.clone.repository.DocumentRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -26,6 +30,7 @@ import java.util.UUID;
 public class DocumentMultipartHandler {
 
     private final AmazonS3 amazonS3;
+    private final DocumentRepository documentRepository;
 
     @Value("${music-upload-s3-bucket}")
     private String s3Bucket;
@@ -42,22 +47,22 @@ public class DocumentMultipartHandler {
                 ? files[0].getName()
                 : musicName;
 
+
+        // Get the file from the list of the Files
         MultipartFile multipartFile = files[0];
+
+        // Convert the multipart to the file object
         File file = convertMultiPartToFile(multipartFile);
 
-        // Build Hashing function and the hashkey from the file bytes
-        StringBuilder hashBuilder = new StringBuilder();
-        MessageDigest messageDigest = MessageDigest.getInstance("SHA-256");
-        byte[] fileBytes = messageDigest.digest(Files.readAllBytes(file.toPath()));
-        for(byte b : fileBytes) {
-            hashBuilder.append(String.format("%02x", b));
-        }
+        // Create hash key from the file object
+        String hashKey = createHashKey(file);
+        if(documentRepository.existsByHashKey(hashKey))
+            throw new DuplicateFilePath("File already exists");
 
-        // Documents builder from the file
-        Documents documents = getTheDocumentsForDatabase(multipartFile, hashBuilder.toString());
+        Documents documents = getTheDocumentsForDatabase(multipartFile, hashKey);
         amazonS3.putObject(
                 new PutObjectRequest(s3Bucket, documents.getName(), file)
-                .withCannedAcl(CannedAccessControlList.PublicRead)
+                        .withCannedAcl(CannedAccessControlList.PublicRead)
         );
 
 
@@ -80,6 +85,12 @@ public class DocumentMultipartHandler {
             }
         }
 
+        if (fileExtension == null || fileExtension.isEmpty())
+            throw new FileExtensionEmpty("File extension is empty");
+
+        if (!fileExtension.equals("mp3"))
+            throw new FileExtensionNotSupported("File extension is not supported " + fileExtension);
+
         return Documents.builder()
                 .name(uniqueFileName + "-" + originalFilename)
                 .fileExtension(fileExtension)
@@ -94,5 +105,16 @@ public class DocumentMultipartHandler {
         fos.write(file.getBytes());
         fos.close();
         return convFile;
+    }
+
+    private static String createHashKey(File file) throws NoSuchAlgorithmException, IOException {
+        // Build Hashing function and the hashkey from the file bytes
+        StringBuilder hashBuilder = new StringBuilder();
+        MessageDigest messageDigest = MessageDigest.getInstance("SHA-256");
+        byte[] fileBytes = messageDigest.digest(Files.readAllBytes(file.toPath()));
+        for (byte b : fileBytes) {
+            hashBuilder.append(String.format("%02x", b));
+        }
+        return hashBuilder.toString();
     }
 }
