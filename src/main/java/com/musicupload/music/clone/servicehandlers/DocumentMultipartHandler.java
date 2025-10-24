@@ -43,7 +43,7 @@ public class DocumentMultipartHandler {
         if (files == null || files.length != 1)
             throw new IllegalArgumentException("Invalid files provided");
 
-        String musicFileName = (musicName == null || !musicName.isEmpty())
+        String musicFileName = (musicName == null || musicName.isEmpty())
                 ? files[0].getName()
                 : musicName;
 
