@@ -19,6 +19,8 @@ Change the configs in the aws to support the cloud development
 2. Listing the s3 buckets
     aws s3 ls s3://my-local-music-bucket  --endpoint-url=http://localhost:4566
 
+3. Copying files from local
+    aws s3 cp <path> s3://my-local-music-bucket --recursive --exclude "*" --include "*.mp3" --endpoint-url=http://localhost:4566
  */
 @Configuration
 public class AwsConfiguration {

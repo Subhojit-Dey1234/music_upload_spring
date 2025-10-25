@@ -40,4 +40,13 @@ public class Users {
     @JsonIgnore
     @Builder.Default
     List<Musics> musics = new ArrayList<>();
+
+    @ManyToMany(fetch = FetchType.LAZY)
+    @JoinTable(
+            name = "user_likes",
+            joinColumns = @JoinColumn(name = "user_id"),
+            inverseJoinColumns = @JoinColumn(name = "music_id")
+    )
+    @Builder.Default
+    private List<Musics> musicLiked = new ArrayList<>();
 }

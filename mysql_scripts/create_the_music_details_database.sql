@@ -26,3 +26,11 @@ CREATE TABLE documents (
 
 ALTER TABLE musics add column ( document_id INT NOT NULL );
 ALTER TABLE documents add column ( hash_key VARCHAR(5000) NOT NULL );
+
+CREATE TABLE user_likes(
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    music_id INT NOT NULL,
+    user_id INT NOT NULL,
+    FOREIGN KEY (music_id) REFERENCES musics(id),
+    FOREIGN KEY (user_id) REFERENCES users(id)
+);

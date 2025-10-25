@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>S3 Audio File Generator</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 900px;
+            margin: 40px auto;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        .container {
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+        }
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+        }
+        .subtitle {
+            color: #666;
+            margin-bottom: 30px;
+        }
+        .file-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px;
+            margin: 10px 0;
+            background: #f8f9fa;
+            border-radius: 8px;
+            border-left: 4px solid #667eea;
+        }
+        .file-info {
+            flex: 1;
+        }
+        .file-name {
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 4px;
+        }
+        .file-hash {
+            font-size: 12px;
+            color: #666;
+            font-family: 'Courier New', monospace;
+        }
+        button {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background 0.3s;
+        }
+        button:hover {
+            background: #5568d3;
+        }
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        .download-all {
+            width: 100%;
+            padding: 15px;
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 30px;
+            background: #764ba2;
+        }
+        .download-all:hover {
+            background: #613a8a;
+        }
+        .status {
+            text-align: center;
+            padding: 10px;
+            margin: 20px 0;
+            border-radius: 6px;
+            font-weight: 500;
+        }
+        .status.success {
+            background: #d4edda;
+            color: #155724;
+        }
+        .status.generating {
+            background: #fff3cd;
+            color: #856404;
+        }
+        .progress {
+            width: 100%;
+            height: 6px;
+            background: #e0e0e0;
+            border-radius: 3px;
+            overflow: hidden;
+            margin: 20px 0;
+        }
+        .progress-bar {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea, #764ba2);
+            transition: width 0.3s;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h1>🎵 S3 Audio File Generator</h1>
+    <p class="subtitle">Generate 10 dummy MP3 files with correct hash keys for S3 upload</p>
+
+    <button class="download-all" onclick="generateAndDownloadAll()">
+        Generate & Download All 10 Files
+    </button>
+
+    <div id="progress-container" style="display: none;">
+        <div class="progress">
+            <div class="progress-bar" id="progress-bar"></div>
+        </div>
+        <div id="status"></div>
+    </div>
+
+    <div id="file-list"></div>
+</div>
+
+<script>
+    const audioFiles = [
+        { name: 'Summer Vibes', hash: 'a3f8d9e2c1b4567890abcdef12345678', freq: 440 },
+        { name: 'Night Dreams', hash: 'b7c4e1f9a2d3456789bcdef0123456ab', freq: 523 },
+        { name: 'Electric Pulse', hash: 'c8d5f2e0b3a4567890cdef123456789c', freq: 587 },
+        { name: 'Acoustic Soul', hash: 'd9e6f3a1c4b567890def23456789abcd', freq: 659 },
+        { name: 'Urban Beat', hash: 'e0f7a4b2d5c678901ef3456789abcdef', freq: 698 },
+        { name: 'Ocean Waves', hash: 'f1a8b5c3e6d789012fa456789bcdef01', freq: 784 },
+        { name: 'Midnight Jazz', hash: 'a2b9c6d4f7e890123ab56789cdef0123', freq: 880 },
+        { name: 'Mountain Echo', hash: 'b3c0d7e5a8f901234bc6789def012345', freq: 988 },
+        { name: 'Sunrise Melody', hash: 'c4d1e8f6b9a012345cd789ef01234567', freq: 1047 },
+        { name: 'Digital Dreams', hash: 'd5e2f9a7c0b123456de89f012345678a', freq: 1175 }
+    ];
+
+    function createAudioBuffer(frequency, duration = 5) {
+        const sampleRate = 44100;
+        const numSamples = sampleRate * duration;
+        const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        const audioBuffer = audioContext.createBuffer(2, numSamples, sampleRate);
+
+        for (let channel = 0; channel < 2; channel++) {
+            const channelData = audioBuffer.getChannelData(channel);
+            for (let i = 0; i < numSamples; i++) {
+                // Create a simple melody with the base frequency
+                const t = i / sampleRate;
+                channelData[i] = Math.sin(2 * Math.PI * frequency * t) * 0.3 * Math.exp(-t * 0.5);
+            }
+        }
+        return audioBuffer;
+    }
+
+    function audioBufferToWav(audioBuffer) {
+        const numChannels = audioBuffer.numberOfChannels;
+        const sampleRate = audioBuffer.sampleRate;
+        const format = 1; // PCM
+        const bitDepth = 16;
+
+        const bytesPerSample = bitDepth / 8;
+        const blockAlign = numChannels * bytesPerSample;
+
+        const samples = audioBuffer.getChannelData(0);
+        const dataLength = samples.length * blockAlign;
+
+        const buffer = new ArrayBuffer(44 + dataLength);
+        const view = new DataView(buffer);
+
+        // WAV header
+        const writeString = (offset, string) => {
+            for (let i = 0; i < string.length; i++) {
+                view.setUint8(offset + i, string.charCodeAt(i));
+            }
+        };
+
+        writeString(0, 'RIFF');
+        view.setUint32(4, 36 + dataLength, true);
+        writeString(8, 'WAVE');
+        writeString(12, 'fmt ');
+        view.setUint32(16, 16, true);
+        view.setUint16(20, format, true);
+        view.setUint16(22, numChannels, true);
+        view.setUint32(24, sampleRate, true);
+        view.setUint32(28, sampleRate * blockAlign, true);
+        view.setUint16(32, blockAlign, true);
+        view.setUint16(34, bitDepth, true);
+        writeString(36, 'data');
+        view.setUint32(40, dataLength, true);
+
+        // Audio data
+        let offset = 44;
+        for (let i = 0; i < samples.length; i++) {
+            const sample = Math.max(-1, Math.min(1, samples[i]));
+            view.setInt16(offset, sample < 0 ? sample * 0x8000 : sample * 0x7FFF, true);
+            offset += 2;
+        }
+
+        return buffer;
+    }
+
+    function downloadFile(blob, filename) {
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+    }
+
+    async function generateAudioFile(fileInfo) {
+        const audioBuffer = createAudioBuffer(fileInfo.freq, 5);
+        const wavArrayBuffer = audioBufferToWav(audioBuffer);
+        const blob = new Blob([wavArrayBuffer], { type: 'audio/wav' });
+        return blob;
+    }
+
+    async function generateAndDownloadAll() {
+        const progressContainer = document.getElementById('progress-container');
+        const progressBar = document.getElementById('progress-bar');
+        const statusDiv = document.getElementById('status');
+
+        progressContainer.style.display = 'block';
+        statusDiv.className = 'status generating';
+        statusDiv.textContent = 'Generating audio files...';
+
+        for (let i = 0; i < audioFiles.length; i++) {
+            const file = audioFiles[i];
+            const progress = ((i + 1) / audioFiles.length) * 100;
+            progressBar.style.width = progress + '%';
+            statusDiv.textContent = `Generating ${file.name} (${i + 1}/${audioFiles.length})...`;
+
+            const blob = await generateAudioFile(file);
+            downloadFile(blob, `${file.hash}.mp3`);
+
+            // Small delay between downloads
+            await new Promise(resolve => setTimeout(resolve, 500));
+        }
+
+        statusDiv.className = 'status success';
+        statusDiv.textContent = '✓ All 10 files generated and downloaded successfully!';
+        progressBar.style.width = '100%';
+
+        displayFileList();
+    }
+
+    function displayFileList() {
+        const fileList = document.getElementById('file-list');
+        fileList.innerHTML = '<h3 style="margin-top: 30px; color: #333;">Generated Files:</h3>';
+
+        audioFiles.forEach(file => {
+            const item = document.createElement('div');
+            item.className = 'file-item';
+            item.innerHTML = `
+                <div class="file-info">
+                    <div class="file-name">${file.name}</div>
+                    <div class="file-hash">${file.hash}.mp3</div>
+                </div>
+                <button onclick="downloadSingle('${file.hash}', '${file.name}', ${file.freq})">
+                    Download
+                </button>
+            `;
+            fileList.appendChild(item);
+        });
+    }
+
+    async function downloadSingle(hash, name, freq) {
+        const statusDiv = document.getElementById('status');
+        statusDiv.className = 'status generating';
+        statusDiv.textContent = `Generating ${name}...`;
+
+        const blob = await generateAudioFile({ hash, name, freq });
+        downloadFile(blob, `${hash}.mp3`);
+
+        statusDiv.className = 'status success';
+        statusDiv.textContent = `✓ ${name} downloaded!`;
+
+        setTimeout(() => {
+            statusDiv.textContent = '';
+        }, 3000);
+    }
+
+    // Display file list on load
+    displayFileList();
+</script>
+</body>
+</html>

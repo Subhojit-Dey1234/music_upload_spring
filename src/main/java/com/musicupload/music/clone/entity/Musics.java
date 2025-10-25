@@ -1,5 +1,6 @@
 package com.musicupload.music.clone.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -36,6 +37,7 @@ public class Musics {
 
     @ManyToOne
     @JoinColumn(name = "user_id", nullable = false, insertable = false, updatable = false)
+    @JsonIgnore
     private Users user;
 
     @ManyToOne(cascade = CascadeType.ALL)
