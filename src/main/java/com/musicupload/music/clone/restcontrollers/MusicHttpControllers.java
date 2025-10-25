@@ -7,13 +7,12 @@ import com.musicupload.music.clone.repository.MusicRepository;
 import com.musicupload.music.clone.servicehandlers.DocumentMultipartHandler;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.core.io.InputStreamResource;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
-
-import java.io.IOException;
-import java.security.NoSuchAlgorithmException;
 import java.util.List;
 
 @RestController
@@ -51,5 +50,11 @@ public class MusicHttpControllers {
         } catch (Exception ex) {
             throw new RuntimeException("Error saving music");
         }
+    }
+
+    @GetMapping("/stream/{id}")
+    public ResponseEntity<InputStreamResource> streamMusic(@PathVariable Long id,
+                                                           @RequestHeader(value = "Range", required = false) String range) {
+        return documentMultipartHandler.getFileStreamFromFile(id, range);
     }
 }

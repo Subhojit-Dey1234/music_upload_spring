@@ -1,17 +1,22 @@
 package com.musicupload.music.clone.servicehandlers;
 
 import com.amazonaws.services.s3.AmazonS3;
-import com.amazonaws.services.s3.model.CannedAccessControlList;
-import com.amazonaws.services.s3.model.PutObjectRequest;
+import com.amazonaws.services.s3.model.*;
 import com.musicupload.music.clone.entity.Documents;
 import com.musicupload.music.clone.entity.Musics;
 import com.musicupload.music.clone.exceptions.DuplicateFilePath;
 import com.musicupload.music.clone.exceptions.FileExtensionEmpty;
 import com.musicupload.music.clone.exceptions.FileExtensionNotSupported;
 import com.musicupload.music.clone.repository.DocumentRepository;
+import com.musicupload.music.clone.repository.MusicRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.http.HttpHeaders;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.io.InputStreamResource;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -31,6 +36,7 @@ public class DocumentMultipartHandler {
 
     private final AmazonS3 amazonS3;
     private final DocumentRepository documentRepository;
+    private final MusicRepository musicRepository;
 
     @Value("${music-upload-s3-bucket}")
     private String s3Bucket;
@@ -71,6 +77,52 @@ public class DocumentMultipartHandler {
                 .userId(userId)
                 .documents(documents)
                 .build();
+    }
+
+    // Handle this with headers in the frontend with each partition to end the packets.
+    // Window function to handle this will work and everything will be handle in the frontend to handle the music play
+    public ResponseEntity<InputStreamResource> getFileStreamFromFile(Long id, String randHeader){
+        try{
+            Musics musics = musicRepository.findById(id).orElseThrow(() -> new RuntimeException("music not found"));
+            String s3FilePath = musics.getDocuments().getName();
+
+            var objectMetadata = amazonS3.getObjectMetadata(s3Bucket, s3FilePath);
+            long fileSize = objectMetadata.getContentLength();
+            String contentType = objectMetadata.getContentType();
+            if(contentType == null) contentType = "audio/mpeg";
+
+            if(randHeader == null){
+                S3Object s3Object = amazonS3.getObject(s3Bucket, s3FilePath);
+                S3ObjectInputStream inputStream = s3Object.getObjectContent();
+
+                return ResponseEntity.ok()
+                        .contentType(MediaType.parseMediaType(contentType))
+                        .header(HttpHeaders.CONTENT_LENGTH, String.valueOf(fileSize))
+                        .header(HttpHeaders.ACCEPT_RANGES, "bytes")
+                        .body(new InputStreamResource(inputStream));
+            }
+
+            String[] ranges = randHeader.replace("bytes=", "").split("-");
+            long rangeStart = Long.parseLong(ranges[0]);
+            long rangeEnd = ranges.length > 1 && !ranges[1].isEmpty() ? Long.parseLong(ranges[1]) : fileSize-1;
+
+            long contentLength = rangeEnd - rangeStart + 1;
+            GetObjectRequest getObjectRequest = new GetObjectRequest(s3Bucket, s3FilePath)
+                    .withRange(rangeStart, rangeEnd);
+
+            S3Object s3Object = amazonS3.getObject(getObjectRequest);
+            S3ObjectInputStream inputStream = s3Object.getObjectContent();
+
+            return ResponseEntity.status(HttpStatus.PARTIAL_CONTENT)
+                    .contentType(MediaType.parseMediaType(contentType))
+                    .header(HttpHeaders.CONTENT_LENGTH, String.valueOf(contentLength))
+                    .header(HttpHeaders.ACCEPT_RANGES, "bytes")
+                    .header(HttpHeaders.CONTENT_RANGE, String.format("bytes %d-%d", rangeStart, rangeEnd))
+                    .body(new InputStreamResource(inputStream));
+
+        }catch (Exception e){
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
     }
 
     private Documents getTheDocumentsForDatabase(MultipartFile file, String hashKey) {
