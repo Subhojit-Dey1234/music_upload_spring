@@ -54,9 +54,3 @@ INSERT INTO user_likes (music_id, user_id) VALUES
 (9, 1), (9, 2), (9, 3),
 -- Music 10 likes
 (10, 1), (10, 2), (10, 3), (10, 4);
-
-
-
-select u1_0.id,u1_0.created_at,u1_0.email,u1_0.name,u1_0.password from music_details.users u1_0
-join music_details.user_likes ul1_0 on u1_0.id=ul1_0.user_id
-join music_details.musics m1_0 on m1_0.id=ul1_0.music_id where u1_0.id = 1;

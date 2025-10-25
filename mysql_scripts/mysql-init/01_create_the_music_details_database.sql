@@ -1,3 +1,5 @@
+USE music_details;
+
 CREATE TABLE users (
     id INT PRIMARY KEY AUTO_INCREMENT,
     name VARCHAR(255) NOT NULL,
@@ -22,7 +24,6 @@ CREATE TABLE documents (
     size INT NOT NULL,
     file_extension VARCHAR(50)
 );
-
 
 ALTER TABLE musics add column ( document_id INT NOT NULL );
 ALTER TABLE documents add column ( hash_key VARCHAR(5000) NOT NULL );
