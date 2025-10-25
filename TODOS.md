@@ -1,2 +1,2 @@
-1. Check how to run the music from the backend to the frontend
-2. Create a stream with a window size
+1. Add likes and comments per music
+2. Add Reshare option
