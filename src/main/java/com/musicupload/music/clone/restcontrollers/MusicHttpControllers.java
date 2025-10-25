@@ -55,6 +55,9 @@ public class MusicHttpControllers {
     @GetMapping("/stream/{id}")
     public ResponseEntity<InputStreamResource> streamMusic(@PathVariable Long id,
                                                            @RequestHeader(value = "Range", required = false) String range) {
-        return documentMultipartHandler.getFileStreamFromFile(id, range);
+
+        Musics music = musicRepository.findById(id).orElseThrow(()  ->
+                new ResponseStatusException(HttpStatus.NOT_FOUND));
+        return documentMultipartHandler.getFileStreamFromFile(music, range);
     }
 }

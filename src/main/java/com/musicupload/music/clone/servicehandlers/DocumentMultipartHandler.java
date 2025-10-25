@@ -8,7 +8,6 @@ import com.musicupload.music.clone.exceptions.DuplicateFilePath;
 import com.musicupload.music.clone.exceptions.FileExtensionEmpty;
 import com.musicupload.music.clone.exceptions.FileExtensionNotSupported;
 import com.musicupload.music.clone.repository.DocumentRepository;
-import com.musicupload.music.clone.repository.MusicRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.http.HttpHeaders;
@@ -36,7 +35,6 @@ public class DocumentMultipartHandler {
 
     private final AmazonS3 amazonS3;
     private final DocumentRepository documentRepository;
-    private final MusicRepository musicRepository;
 
     @Value("${music-upload-s3-bucket}")
     private String s3Bucket;
@@ -81,11 +79,9 @@ public class DocumentMultipartHandler {
 
     // Handle this with headers in the frontend with each partition to end the packets.
     // Window function to handle this will work and everything will be handle in the frontend to handle the music play
-    public ResponseEntity<InputStreamResource> getFileStreamFromFile(Long id, String randHeader){
+    public ResponseEntity<InputStreamResource> getFileStreamFromFile(Musics musics, String randHeader){
         try{
-            Musics musics = musicRepository.findById(id).orElseThrow(() -> new RuntimeException("music not found"));
             String s3FilePath = musics.getDocuments().getName();
-
             var objectMetadata = amazonS3.getObjectMetadata(s3Bucket, s3FilePath);
             long fileSize = objectMetadata.getContentLength();
             String contentType = objectMetadata.getContentType();
