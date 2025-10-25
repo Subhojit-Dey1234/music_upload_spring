@@ -40,6 +40,7 @@ dependencies {
     compileOnly 'org.projectlombok:lombok:1.18.34'
     annotationProcessor 'org.projectlombok:lombok:1.18.34'
     implementation 'com.amazonaws:aws-java-sdk:1.12.792'
+    implementation 'io.micrometer:micrometer-registry-prometheus:1.15.5'
 }
 
 dependencyManagement {

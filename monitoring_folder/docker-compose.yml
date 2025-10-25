@@ -1,0 +1,23 @@
+version: '3.7'
+
+services:
+  prometheus:
+    image: prom/prometheus:v2.44.0
+    container_name: prometheus
+    ports:
+      - "42069:9090"
+    volumes:
+      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+  grafana:
+    image: grafana/grafana
+    container_name: grafana
+    ports:
+      - "3001:3000"
+    restart: unless-stopped
+    depends_on:
+      - prometheus
+    volumes:
+      - ./grafana/provisioning/datasources:/etc/grafana/provisioning/datasources
