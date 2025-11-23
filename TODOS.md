@@ -1,2 +1,3 @@
-1. Add likes and comments per music
-2. Add Reshare option
+1. Add Reshare option
+2. Add Spring Security with jwt authentication
+3. Adding caching logic
