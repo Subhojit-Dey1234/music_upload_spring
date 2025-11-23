@@ -4,7 +4,9 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 
 @Entity
 @Table(name = "musics", catalog = "music_details")
@@ -43,4 +45,10 @@ public class Musics {
     @ManyToOne(cascade = CascadeType.ALL)
     @JoinColumn(name = "document_id", nullable = false)
     private Documents documents;
+
+    @OneToMany(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    @JoinColumn(name = "music_id", referencedColumnName = "id")
+    @Builder.Default
+    @JsonIgnore
+    private List<UserComments> comments = new ArrayList<>();
 }

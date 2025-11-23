@@ -1,5 +1,6 @@
 package com.musicupload.music.clone.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -33,5 +34,6 @@ public class Documents {
     private String fileExtension;
 
     @Column(name = "hash_key", nullable = false, length = 5000)
+    @JsonIgnore
     private String hashKey;
 }

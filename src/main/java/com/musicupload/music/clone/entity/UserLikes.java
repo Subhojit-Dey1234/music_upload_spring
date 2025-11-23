@@ -3,6 +3,10 @@ package com.musicupload.music.clone.entity;
 import jakarta.persistence.*;
 import lombok.*;
 
+/*
+The likes linked with the user and the music_id
+Denotes the user that are linked with the music_id
+ */
 @Entity
 @Table(name = "user_likes", catalog = "music_details")
 @Builder

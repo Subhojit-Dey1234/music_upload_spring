@@ -1,12 +1,10 @@
 package com.musicupload.music.clone.restcontrollers;
 
+import com.musicupload.music.clone.dto.UserPost;
 import com.musicupload.music.clone.entity.Users;
 import com.musicupload.music.clone.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.Optional;
@@ -24,8 +22,16 @@ public class UserHttpControllers {
     }
 
     @GetMapping("/{id}")
-    public Users findById(@PathVariable Long id) {
-        return userRepository.findById(id)
+    public UserPost findById(@PathVariable Long id) {
+        Users users = userRepository.findById(id)
                 .orElseThrow();
+        return UserPost.builder()
+                .id(users.getId())
+                .name(users.getName())
+                .email(users.getEmail())
+                .localDateTime(users.getCreatedAt())
+                .musicsList(users.getMusicLiked())
+                .comments(users.getCommentedPosts())
+                .build();
     }
 }

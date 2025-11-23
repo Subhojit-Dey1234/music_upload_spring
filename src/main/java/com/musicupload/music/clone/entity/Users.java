@@ -49,4 +49,10 @@ public class Users {
     )
     @Builder.Default
     private List<Musics> musicLiked = new ArrayList<>();
+
+    @OneToMany(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    @JoinColumn(name = "user_id", referencedColumnName = "id")
+    @Builder.Default
+    @JsonIgnore
+    private List<UserComments> commentedPosts = new ArrayList<>();
 }

@@ -35,3 +35,12 @@ CREATE TABLE user_likes(
     FOREIGN KEY (music_id) REFERENCES musics(id),
     FOREIGN KEY (user_id) REFERENCES users(id)
 );
+
+CREATE TABLE user_comments(
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    music_id INT NOT NULL,
+    user_id INT NOT NULL,
+    comments VARCHAR(500) NOT NULL,
+    FOREIGN KEY (music_id) REFERENCES musics(id),
+    FOREIGN KEY (user_id) REFERENCES users(id)
+);
