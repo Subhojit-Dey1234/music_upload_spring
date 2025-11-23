@@ -12,8 +12,6 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(CustomErrorHandling.class)
     public ResponseEntity<String> handleCustomerError(CustomErrorHandling ex){
-        log.error("[Custom Error handling] error while handling - {}", ex.getMessage());
-        ex.printStackTrace();
         return ResponseEntity
                 .status(HttpStatus.BAD_REQUEST)
                 .body(ex.getMessage());
@@ -21,8 +19,6 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<String> handleError(Exception ex){
-        log.error("[Custom Error handling] error while handling - {}", ex.getMessage());
-        ex.printStackTrace();
         return ResponseEntity
                 .status(HttpStatus.BAD_REQUEST)
                 .body("Error saving music");
