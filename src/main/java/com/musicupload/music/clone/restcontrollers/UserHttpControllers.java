@@ -1,5 +1,6 @@
 package com.musicupload.music.clone.restcontrollers;
 
+import com.musicupload.music.clone.dto.UserBaseProjection;
 import com.musicupload.music.clone.dto.UserPost;
 import com.musicupload.music.clone.entity.Users;
 import com.musicupload.music.clone.repository.UserRepository;
@@ -7,7 +8,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/users")
@@ -17,8 +17,8 @@ public class UserHttpControllers {
     private final UserRepository userRepository;
 
     @GetMapping
-    public List<Users> findAll() {
-        return userRepository.findAll();
+    public List<UserBaseProjection> findAll() {
+        return userRepository.findAllUsers();
     }
 
     @GetMapping("/{id}")
