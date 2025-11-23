@@ -57,7 +57,6 @@ public class DocumentMultipartHandler {
 
         // Convert the multipart to the file object
         File file = convertMultiPartToFile(multipartFile);
-
         // Create hash key from the file object
         String hashKey = createHashKey(file);
         if(documentRepository.existsByHashKey(hashKey))
@@ -68,7 +67,10 @@ public class DocumentMultipartHandler {
                 new PutObjectRequest(s3Bucket, documents.getName(), file)
                         .withCannedAcl(CannedAccessControlList.PublicRead)
         );
-
+        if(file.exists()){
+            boolean isDeleteSuccess = file.delete();
+            if(isDeleteSuccess) log.info("File deleted successfully");
+        }
 
         return Musics.builder()
                 .name(musicFileName)

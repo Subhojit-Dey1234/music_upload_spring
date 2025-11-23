@@ -4,11 +4,11 @@ package com.musicupload.music.clone.restcontrollers;
 import com.musicupload.music.clone.dto.Comments;
 import com.musicupload.music.clone.entity.Musics;
 import com.musicupload.music.clone.entity.UserComments;
-import com.musicupload.music.clone.exceptions.CustomErrorHandling;
 import com.musicupload.music.clone.repository.MusicRepository;
 import com.musicupload.music.clone.repository.UserCommentsRepository;
 import com.musicupload.music.clone.servicehandlers.DocumentMultipartHandler;
 import lombok.RequiredArgsConstructor;
+import org.checkerframework.checker.index.qual.Positive;
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -41,19 +41,11 @@ public class MusicHttpControllers {
     @Transactional
     public Musics saveMusic(
             @RequestParam(value = "documents") MultipartFile[] documents,
-            @RequestParam(value = "userId") Long userId,
+            @RequestParam(value = "userId") @Positive Long userId,
             @RequestParam(value = "musicName", required = false) String musicName
-            ) {
-        try{
-            Musics music = documentMultipartHandler.saveDocuments(documents, userId, musicName);
-            return musicRepository.save(music);
-        }catch (CustomErrorHandling customErrorHandling) {
-            throw new ResponseStatusException(
-                    HttpStatus.BAD_REQUEST,
-                    customErrorHandling.getMessage());
-        } catch (Exception ex) {
-            throw new RuntimeException("Error saving music");
-        }
+            ) throws Exception {
+        Musics music = documentMultipartHandler.saveDocuments(documents, userId, musicName);
+        return musicRepository.save(music);
     }
 
     @GetMapping("/stream/{id}")
@@ -72,18 +64,14 @@ public class MusicHttpControllers {
             @PathVariable("userId") Long userId,
             @RequestBody Comments comments
             ){
-        try {
-            Musics music = musicRepository.findById(id).orElseThrow(()  ->
-                    new ResponseStatusException(HttpStatus.NOT_FOUND));
-            UserComments userComments = UserComments.builder()
-                    .userId(userId)
-                    .musics(music)
-                    .comments(comments.getComments())
-                    .build();
-            userCommentsRepository.save(userComments);
-            return comments.getComments();
-        }catch (Exception ex){
-            throw new RuntimeException("Error saving comments");
-        }
+        Musics music = musicRepository.findById(id).orElseThrow(()  ->
+                new ResponseStatusException(HttpStatus.NOT_FOUND));
+        UserComments userComments = UserComments.builder()
+                .userId(userId)
+                .musics(music)
+                .comments(comments.getComments())
+                .build();
+        userCommentsRepository.save(userComments);
+        return userComments.getComments();
     }
 }
