@@ -20,6 +20,10 @@ public class CustomUserDetailsService implements UserDetailsService {
 
     @Override
     public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
+        /*
+        This is used in the authentication login and validation of the token
+         */
+
         Users users = userRepository.findByEmail(email).orElseThrow(
                 ()-> new UsernameNotFoundException("User not found with email: " + email)
         );
@@ -33,5 +37,10 @@ public class CustomUserDetailsService implements UserDetailsService {
                         )
                 )
                 .build();
+    }
+
+    public Users loadUserEntityByEmail(String email) {
+        return userRepository.findByEmail(email)
+                .orElseThrow(() -> new UsernameNotFoundException("User not found with email: " + email));
     }
 }
