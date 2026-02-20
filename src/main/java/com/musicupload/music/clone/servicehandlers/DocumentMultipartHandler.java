@@ -115,7 +115,7 @@ public class DocumentMultipartHandler {
                     .contentType(MediaType.parseMediaType(contentType))
                     .header(HttpHeaders.CONTENT_LENGTH, String.valueOf(contentLength))
                     .header(HttpHeaders.ACCEPT_RANGES, "bytes")
-                    .header(HttpHeaders.CONTENT_RANGE, String.format("bytes %d-%d", rangeStart, rangeEnd))
+                    .header(HttpHeaders.CONTENT_RANGE, String.format("bytes %d-%d/%d", rangeStart, rangeEnd, fileSize))
                     .body(new InputStreamResource(inputStream));
 
         }catch (Exception e){

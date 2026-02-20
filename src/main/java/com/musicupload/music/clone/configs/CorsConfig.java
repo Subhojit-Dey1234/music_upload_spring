@@ -17,6 +17,7 @@ public class CorsConfig {
                         .allowedOrigins("http://localhost:5173") // Your Vite frontend
                         .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
                         .allowedHeaders("*")
+                        .exposedHeaders("Content-Range", "Accept-Ranges", "Content-Length")
                         .allowCredentials(true)
                         .maxAge(3600);
             }
